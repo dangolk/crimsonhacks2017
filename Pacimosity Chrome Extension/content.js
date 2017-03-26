@@ -43,6 +43,14 @@ function httpPOST(textOnly, url)
 		if(this.readyState == 4 && this.status == 200){
 			var jsonResponse = JSON.parse(this.responseText)
 			console.log(jsonResponse);
+
+			var phrases = ["phrase", "Stand up and stretch", "Stop and walk away from your screen", "Go for a walk", "Close your eyes and inhale for 3 seconds from deep within your diaphragm, then exhale for 3 seconds. Repeat 3 times.", "Catch your Breath", "Life goes by fast. Enjoy it. Calm down. It's all funny. Next. Everyone gets so upset about the wrong things. - Joan Rivers ", "Sooner or later you learn that you belong in the big leagues, and that makes you calm down. - Dennis Eckersley", "The biggest challenge for me is just knowing how to calm down. - Desiigner"];
+
+			if(jsonResponse > 10){
+				alert(phrases[jsonResponse%9]);
+			}
+
+
 			chrome.runtime.sendMessage({score:jsonResponse}, function (response){
 
 			});

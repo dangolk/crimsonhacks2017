@@ -13,6 +13,7 @@ application.config['MYSQL_DATABASE_HOST'] = 'localhost'
 application.config['MYSQL_DATABASE_PORT'] = 3306
 db.init_app(application)
 
+
 conn = db.connect()
 cursor = conn.cursor(DictCursor)
 
