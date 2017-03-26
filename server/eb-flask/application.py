@@ -1,4 +1,5 @@
 import sys
+import math
 from flask import Flask, request, json
 from flaskext.mysql import MySQL
 from pymysql.cursors import DictCursor
@@ -16,31 +17,29 @@ conn = db.connect()
 cursor = conn.cursor(DictCursor)
 
 mild_words = {}
-curse_words = []
-race_words = []
+curse_words = {}
+race_words = {}
 
 cursor.execute("SELECT * FROM mild")
 data = cursor.fetchall()
 for item in data:
 	#print(item)
-	mild_words[item['word']] =item ['weight']
-
-
-print(mild_words)
+	mild_words[item['word']] =item['weight']
 
 cursor.execute("SELECT * FROM race")
 data = cursor.fetchall()
 for item in data:
-	race_words.append({item['word']:item['weight']})
+	race_words[item['word']] =item['weight']
 
 
-
+#(100/#of words on page) * log(weight)
 cursor.execute("SELECT * FROM curse")
 data = cursor.fetchall()
 for item in data:
-	curse_words.append({item['word']:item['weight']})
+	curse_words[item['word']] =item['weight']
 
 #print(data)
+cursor.close()
 conn.close()
 
 @application.route('/')
@@ -49,7 +48,6 @@ def hello_world():
 
 @application.route('/parse', methods=['POST'])
 def parse_text():
-	conn = db.connect()
 	bad_word_count = 0
 	content = request.get_json()
 	print(content)
@@ -58,24 +56,38 @@ def parse_text():
 	url = content["url"]
 	print(url);
 	page_text = content["text"].split(" ") #for now assume that im getting a list of words with spaces between them
+
+	number_of_words = len(page_text)
+	print(number_of_words)
 	#print(page_text, file=sys.stderr)
 	for word in page_text:
 		if word.strip(" ") in mild_words:
 			print("true")
 			bad_word_count += mild_words[word]
 
-		elif word.strip(" ") in race_words:
+		if word.strip(" ") in race_words:
 			print("true")
 			bad_word_count += race_words[word]
 
-		elif word.strip(" ") in curse_words:
+		if word.strip(" ") in curse_words:
 			print("true")
 			bad_word_count += curse_words[word]
 
 
-	print(bad_word_count)
+	if bad_word_count == 0:
+		weight = 0;
+	else:
+		weight = ((100/number_of_words) * math.log10(bad_word_count)) * 100
+		weight = round(weight, 1)
+	print(weight)
+
+	conn = db.connect()
+	cursor = conn.cursor()
+	sql = "INSERT INTO pagerate (page, weight) VALUES (%s, %s) ON DUPLICATE KEY UPDATE weight=%s"
+	cursor.execute(sql, (url, float(weight), float(weight)))
+	conn.commit()
 	conn.close()
-	return "Found " + str(bad_word_count) + " bad words on this page"
+	return json.jsonify(bad_word_count)
 
 if __name__ == '__main__':
 	application.debug = True
