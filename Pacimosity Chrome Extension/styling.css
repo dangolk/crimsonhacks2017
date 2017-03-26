@@ -1,0 +1,15 @@
+#title {
+}
+
+#content,#title {
+  background: #999999;
+  color:#4F545A;
+  display: block;
+  margin: 0px;
+  outline-color: #444;
+  outline-style: none;
+  outline-width: 0px;
+  padding: 10px 30px 5px 10px;
+  width: 230px;
+  border-radius: 3px;
+}
